@@ -1,0 +1,34 @@
+﻿@page "/inactiveUsers"
+
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator")]
+@inject Autoberles.Data.MyDbContext DB
+@rendermode InteractiveServer
+
+
+<PageTitle>Felhasználó visszaállítása</PageTitle>
+
+<h1>Felhasználó visszaállítása</h1>
+<hr />
+
+@if(DB.User is null) {
+    <p>Betöltés...</p>
+} else {
+    <QuickGrid Class="table" Items="DB.User.Where(user=>!user.IsActive)" Pagination="state">
+        <PropertyColumn Title="Felhasználónév" Property="user => user.Username" Sortable="true" />
+        <PropertyColumn Title="Jogosultság" Property="user => user.Role" Sortable="true" />
+        <TemplateColumn Context="user" Title="Szerkesztés">
+            <a href="@($"restoreUser?Id={user.UserID}")" class="btn btn-danger">Visszaállítás</a>
+        </TemplateColumn>
+    </QuickGrid>
+    <Paginator State="state" />
+}
+
+@code {
+    PaginationState state = new PaginationState { ItemsPerPage = 10 };
+
+    // GridSort<Car> sortByType = GridSort<Car>
+    // .ByAscending(p => p.isReady);
+}
+

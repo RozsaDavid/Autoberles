@@ -1,0 +1,71 @@
+﻿@page "/newCar"
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator")]
+@inject MyDbContext DB
+@inject NavigationManager NavManager
+
+<PageTitle>Új autó</PageTitle>
+
+<h1>Új autó</h1>
+
+<div class="row">
+    <div class="col-lg-4 offset-lg-4 pt-4 pb-4 border">
+        <EditForm Model="newCar" class="" FormName="NewCarForm" Enhance OnValidSubmit="AddCar">
+            <DataAnnotationsValidator />
+            <div class="mb-3 text-center flex-column">
+                <img src="/img/login.png" style="max-height: 5rem;" />
+                <h3>Új autó hozzáadása</h3>
+            </div>
+            <div class="mb-3">
+                <label>Rendszám:</label>
+                <InputText @bind-Value="newCar.RegistrationNumber" class="form-control" placeholder="Rendszám" />
+                <ValidationMessage For="()=>newCar.RegistrationNumber" />
+            </div>
+            <div class="mb-3">
+                <label>Márka:</label>
+                <InputText @bind-Value="newCar.Brand" class="form-control" placeholder="Márka" />
+                <ValidationMessage For="()=>newCar.Brand" />
+            </div>
+            <div class="mb-3">
+                <label>Típus:</label>
+                <InputText @bind-Value="newCar.Type" class="form-control" placeholder="Típus" />
+                <ValidationMessage For="()=>newCar.Type" />
+            </div>
+            <div class="mb-3">
+                <label>Évjárat:</label>
+                <InputNumber @bind-Value="newCar.Year" class="form-control" placeholder="Évjárat" />
+                <ValidationMessage For="()=>newCar.Year" />
+            </div>
+            <div class="mb-3">
+                <label>Ár (HUF):</label>
+                <InputNumber @bind-Value="newCar.Price" class="form-control" placeholder="Ár" />
+                <ValidationMessage For="()=>newCar.Price" />
+            </div>
+            <div class="mb-3 d-grid gap-3">
+                <button type="submit" class="btn btn-success">Hozzáadás</button>
+            </div>
+            <div class="mb-3 d-grid gap-3">
+                <a href="/cars" class="btn btn-primary">Vissza az autókhoz</a>
+            </div>
+            </EditForm>
+
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public HttpContext httpContext { get; set; }
+
+    [SupplyParameterFromForm]
+    public Car newCar { get; set; } = new();
+
+    public string? errorMessage;
+
+    private async Task AddCar() {
+        DB.Car.Add(newCar);
+        await DB.SaveChangesAsync();
+
+        NavManager.NavigateTo("/cars");
+    }
+}

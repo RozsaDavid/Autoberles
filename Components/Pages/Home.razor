@@ -1,0 +1,32 @@
+﻿@using Microsoft.AspNetCore.Authorization
+
+@page "/"
+
+<PageTitle>Z&D Autóbérlés</PageTitle>
+
+<div class="row">
+    <AuthorizeView>
+         <NotAuthorized>
+            <div class="col-12">
+                <h2 class="fw-bold">Üdvözöllek az oldalon!</h2>
+            </div>
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <span>
+                            <img src="img/danger.png" style="max-height: 5rem;" /> <br />
+                            Nem vagy bejelentkezve! <br /> Az alábbi gombra kattintva ezt megteheted! <br /><a href="/login" class="btn btn-primary">Login</a>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </NotAuthorized>
+        <Authorized>
+            <div class="col-12">
+                <h2 class="fw-bold">Üdvözöllek, @context.User.Identity.Name!</h2>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+

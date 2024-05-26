@@ -1,0 +1,69 @@
+﻿@page "/deleteReservation"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator, User")]
+@inject Autoberles.Data.MyDbContext DB
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<h3>Törlés</h3>
+<hr />
+<div>
+    @if (ResDB is null)
+    {
+        <p><em>Betöltés...</em></p>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md4">
+
+                <div class="mb-3">
+
+                    <label for="user">Felhasználó ID:</label><br />
+                    <input type="text" id="user" @bind="ResDB.UserID" disabled /><br /><br />
+                    <label for="car">Autó ID:</label><br />
+                    <input type="text" id="car" @bind="ResDB.CarID" disabled /><br /><br />
+                    <label for="ResStart">Foglalás kezdete:</label><br />
+                    <input type="datetime" id="ResStart" @bind="ResDB.StartDate" disabled /><br /><br />
+                    <label for="ResEnd">Foglalás vége:</label><br />
+                    <input type="datetime" id="ResEnd" @bind="ResDB.EndDate" disabled /><br /><br />
+
+                    <p>Ha biztosan törölni kíván kattintson a "Törlés" gombra!</p>
+
+                </div>
+
+                <button type="submit" class="btn btn-danger" disabled="@(ResDB is null)" @onclick="@delRes">Törlés</button>
+                <a href="/cars" class="btn btn-primary">Vissza a foglalásokhoz</a>
+
+            </div>
+        </div>
+
+
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    public Reservation? ResDB { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        ResDB = await DB.Reservation.FirstOrDefaultAsync(m => m.ReservationID == Id);
+
+        if (ResDB is null)
+        {
+            navigationManager.NavigateTo("/Error");
+        }
+    }
+    public async Task delRes()
+    {
+         DB.Remove(ResDB);
+         DB.SaveChangesAsync();
+         navigationManager.NavigateTo("/reservations");
+    }
+ }

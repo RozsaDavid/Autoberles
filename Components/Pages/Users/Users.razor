@@ -1,0 +1,48 @@
+﻿@page "/users"
+
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator")]
+@inject Autoberles.Data.MyDbContext DB
+@rendermode InteractiveServer
+
+
+<PageTitle>Felhasználók</PageTitle>
+
+<h1>Felhasználók</h1>
+<hr />
+
+@if(isThereInactive) {
+    <a href=" /inactiveUsers" class="btn btn-danger">Felhasználó visszaállítása</a>
+}
+
+@if(DB.User is null) {
+    <p>Betöltés...</p>
+} else {
+    <QuickGrid Class="table" Items="DB.User.Where(user=>user.IsActive)" Pagination="state">
+        <PropertyColumn Title="Felhasználónév" Property="user => user.Username" Sortable="true" />
+        <PropertyColumn Title="Jogosultság" Property="user => user.Role" Sortable="true" />
+        <TemplateColumn Context="user" Title="Szerkesztés">
+            <a href="@($"editUser?Id={user.UserID}")" class="btn btn-success">Jogosultság módosítása</a>
+            <a href="@($"deleteUser?Id={user.UserID}")" class="btn btn-danger">Törlés</a>
+        </TemplateColumn>
+    </QuickGrid>
+    <Paginator State="state" />
+}
+
+@code {
+    PaginationState state = new PaginationState { ItemsPerPage = 10 };
+
+    bool isThereInactive = false;
+
+    protected override async Task OnInitializedAsync() {
+        foreach(var elem in DB.User) {
+            if(elem.IsActive == false)
+                isThereInactive = true;
+        }
+
+    }
+    // GridSort<Car> sortByType = GridSort<Car>
+    // .ByAscending(p => p.isReady);
+}
+

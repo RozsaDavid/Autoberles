@@ -1,0 +1,82 @@
+﻿@page "/restoreCar"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator")]
+@inject Autoberles.Data.MyDbContext DB
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+
+<h3>Visszaállítás</h3>
+<hr />
+<div>
+    @if(CarDB is null) {
+        <p><em>Loading...</em></p>
+    } else {
+        <div class="row">
+            <div class="col-md4">
+
+                <div class="mb-3">
+
+                    <label for="regnum">Rendszám:</label><br />
+                    <input type="text" id="regnum" @bind="CarDB.RegistrationNumber" disabled /><br /><br />
+                    <label for="brand">Márka:</label><br />
+                    <input type="text" id="brand" @bind="CarDB.Brand" disabled /><br /><br />
+                    <label for="type">Típus:</label><br />
+                    <input type="text" id="type" @bind="CarDB.Type" disabled /><br /><br />
+                    <label for="year">Évjárat:</label><br />
+                    <input type="number" id="year" @bind="CarDB.Year" disabled /><br /><br />
+                    <label for="price">Ár (HUF):</label><br />
+                    <input type="number" id="price" @bind="CarDB.Price" disabled /><br /><br />
+
+                    <p>Ha biztosan vissza kívánja állítani kattintson a "Visszaállítás" gombra!</p>
+
+                </div>
+
+                <button type="submit" class="btn btn-danger" disabled="@(CarDB is null)" @onclick="restoreCar">Visszaállítás</button>
+                <a href="/inactiveCars" class="btn btn-primary">Vissza az inaktív autókhoz</a>
+
+            </div>
+        </div>
+
+
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    public Car? CarDB { get; set; }
+
+
+    protected override async Task OnInitializedAsync() {
+        CarDB = await DB.Car.FirstOrDefaultAsync(m => m.CarID == Id);
+
+        if(CarDB is null) {
+            navigationManager.NavigateTo("/Error");
+        }
+    }
+
+    public async Task restoreCar() {
+        try {
+            CarDB.IsActive = true;
+            DB.Attach(CarDB).State = EntityState.Modified;
+            // DB.Remove(CarDB);
+            DB.SaveChangesAsync();
+
+        } catch(DbUpdateConcurrencyException) {
+            if(!UserException(CarDB.CarID)) {
+                navigationManager.NavigateTo("/Error");
+            } else {
+                throw;
+            }
+        }
+        navigationManager.NavigateTo("/cars");
+    }
+
+    bool UserException(int id) {
+        return DB.Car.Any(x => x.CarID == id);
+    }
+}

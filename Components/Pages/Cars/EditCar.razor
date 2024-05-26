@@ -1,0 +1,93 @@
+﻿@page "/editCar"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator")]
+@inject Autoberles.Data.MyDbContext DB
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<h3>Szerkesztés</h3>
+<hr />
+
+<div>
+    @if(CarDB is null) {
+        <p><em>Loading...</em></p>
+    } else {
+        <div class="row">
+            <div class="col-md4">
+                <EditForm method="post" Model="CarDB" OnValidSubmit="UpdateCar" FormName="Edit" Enhance>
+                    <div class="mb-3">
+                        <label for="regnum" class="form-label">Rendszám</label>
+                        <InputText id="regnum" class="form-control" @bind-Value="CarDB.RegistrationNumber" />
+                        <ValidationMessage For="()=>CarDB.RegistrationNumber" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="brand" class="form-label">Márka</label>
+                        <InputText id="brand" class="form-control" @bind-Value="CarDB.Brand" />
+                        <ValidationMessage For="()=>CarDB.Brand" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Típus</label>
+                        <InputText id="type" class="form-control" @bind-Value="CarDB.Type" />
+                        <ValidationMessage For="()=>CarDB.Type" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="year" class="form-label">Évjárat</label>
+                        <InputNumber id="year" class="form-control" @bind-Value="CarDB.Year" />
+                        <ValidationMessage For="()=>CarDB.Year" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="year" class="form-label">Ár (HUF)</label>
+                        <InputNumber id="year" class="form-control" @bind-Value="CarDB.Price" />
+                        <ValidationMessage For="()=>CarDB.Price" class="text-danger" />
+                    </div>
+
+                    <button type="submit" class="btn btn-success" disabled="@(CarDB is null)">Mentés</button>
+                    <a href="/cars" class="btn btn-primary">Vissza az autókhoz</a>
+                </EditForm>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    public Car? CarDB { get; set; }
+
+    
+    protected override async Task OnInitializedAsync() {
+        CarDB = await DB.Car.FirstOrDefaultAsync(m => m.CarID == Id);
+
+        if(CarDB is null) {
+            navigationManager.NavigateTo("/Error");
+        }
+    }
+
+    public async Task UpdateCar() {
+        DB.Attach(CarDB).State = EntityState.Modified;
+
+        try {
+            DB.SaveChangesAsync();
+        } catch(DbUpdateConcurrencyException) {
+            if(!UserException(CarDB.CarID)) {
+                navigationManager.NavigateTo("/Error");
+            } else {
+                throw;
+            }
+        }
+
+        navigationManager.NavigateTo("/cars");
+    }
+
+    bool UserException(int id) {
+        return DB.Car.Any(x => x.CarID == id);
+    }
+}

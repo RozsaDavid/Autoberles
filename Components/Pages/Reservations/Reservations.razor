@@ -1,0 +1,103 @@
+﻿@page "/reservations"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator, User")]
+@inject Autoberles.Data.MyDbContext DB
+@rendermode InteractiveServer
+
+<AuthorizeView Roles="Administrator">
+    <Authorized>
+        <PageTitle>Foglalások</PageTitle>
+
+        <h1>Foglalások</h1>
+        <hr />
+        <a href="/newReservation" class="btn btn-primary">Új foglalás</a>
+    </Authorized>
+</AuthorizeView>
+
+<AuthorizeView Roles="User">
+    <Authorized>
+        <PageTitle>Foglalásaim</PageTitle>
+
+        <h1>Foglalásaim</h1>
+        <hr />
+        <a href="/newReservation" class="btn btn-primary">Új foglalás</a>
+    </Authorized>
+</AuthorizeView>
+
+@if(DB.Reservation is null || DB.User is null || DB.Car is null) {
+    <p>Betöltés...</p>
+} else {
+    @foreach(Reservation res in DB.Reservation) {
+        ViewReservation tempVR=new ViewReservation();
+
+        tempVR.ReservationID = res.ReservationID;
+        tempVR.CarID = res.CarID;
+        tempVR.UserID = res.UserID;
+        tempVR.StartDate = res.StartDate;
+        tempVR.EndDate = res.EndDate;
+        viewReservations.Add(tempVR);
+    }
+
+    @foreach(User user in DB.User)
+        @for(int i=0;i<viewReservations.Count;i++)
+            @if (user.UserID == viewReservations[i].UserID)
+                viewReservations[i].Username = user.Username;
+    
+    @foreach(Car car in DB.Car) {
+        @for(int i = 0;i < viewReservations.Count;i++)
+            @if(car.CarID == viewReservations[i].CarID)
+                viewReservations[i].CarBrand = car.Brand;
+    }
+
+    <AuthorizeView Roles="Administrator">
+        <Authorized>
+            <QuickGrid Class="table" Items="@viewReservations.AsQueryable()" Pagination="state">
+                <PropertyColumn Title="Felhasználónév" Property="reservation => reservation.Username" Sortable="true" />
+                <PropertyColumn Title="Autó ID" Property="reservation => reservation.CarID" Sortable="true" />
+                <PropertyColumn Title="Autó típusa (Placeholder)" Property="reservation => reservation.CarBrand" Sortable="true" />
+                <PropertyColumn Title="Foglalás kezdete" Property="reservation => reservation.StartDate" Sortable="true" />
+                <PropertyColumn Title="Foglalás vége" Property="reservation => reservation.EndDate" Sortable="true" />
+                <TemplateColumn Context="reservation" Title="Szerkesztés">
+                    <a href="@($"deleteReservation?Id={reservation.ReservationID}")" class="btn btn-danger">Törlés</a>
+                </TemplateColumn>
+            </QuickGrid>
+            <Paginator State="state" />
+        </Authorized>
+    </AuthorizeView>
+
+    <AuthorizeView Roles="User">
+        <Authorized>
+            <QuickGrid Class="table" Items="@viewReservations.AsQueryable().Where(reservation => reservation.Username==context.User.Identity.Name)" Pagination="state">
+                <PropertyColumn Title="Autó típusa (Placeholder)" Property="reservation => reservation.CarBrand" Sortable="true" />
+                <PropertyColumn Title="Foglalás kezdete" Property="reservation => reservation.StartDate" Sortable="true" />
+                <PropertyColumn Title="Foglalás vége" Property="reservation => reservation.EndDate" Sortable="true" />
+                <TemplateColumn Context="reservation" Title="Szerkesztés">
+                    <a href="@($"deleteReservation?Id={reservation.ReservationID}")" class="btn btn-danger">Törlés</a>
+                </TemplateColumn>
+            </QuickGrid>
+            <Paginator State="state" />
+        </Authorized>
+    </AuthorizeView>
+}
+
+@code {
+    public class ViewReservation {
+        public int ReservationID { get; set; }
+        public int CarID { get; set; }
+        public string CarBrand { get; set; }
+        public int UserID { get; set; }
+        public string Username { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+    }
+
+    List<ViewReservation> viewReservations = new List<ViewReservation>();
+
+    PaginationState state = new PaginationState { ItemsPerPage = 10 };
+
+}
+
+

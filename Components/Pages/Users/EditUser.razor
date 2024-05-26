@@ -1,0 +1,72 @@
+﻿@page "/editUser"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator")]
+@inject Autoberles.Data.MyDbContext DB
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<h3>Szerkesztés</h3>
+<hr />
+
+<div>
+    @if(UserDB is null) {
+        <p><em>Loading...</em></p>
+    } else {
+        <div class="row">
+            <div class="col-md4">
+                <label for="username">Felhasználónév:</label><br />
+                <input type="text" id="username" @bind="UserDB.Username" disabled /><br /><br />
+
+                <p>Válassza ki a jogosultságot a felhasználónak:</p>
+
+                <button type="submit" class="btn btn-danger" disabled="@(UserDB is null)" @onclick="() => UpdateUser(true)">Adminisztrátor</button>
+                <button type="submit" class="btn btn-danger" disabled="@(UserDB is null)" @onclick="() => UpdateUser(false)">Felhasználó</button>
+                <a href="/users" class="btn btn-primary">Vissza a felhasználókhoz</a>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    public User? UserDB { get; set; }
+
+
+    protected override async Task OnInitializedAsync() {
+        UserDB = await DB.User.FirstOrDefaultAsync(m => m.UserID == Id);
+
+        if(UserDB is null) {
+            navigationManager.NavigateTo("/Error");
+        }
+    }
+
+    public async Task UpdateUser(bool isAdmin) {
+        if (isAdmin)
+            UserDB.Role = "Administrator";
+        else
+            UserDB.Role = "User";    
+
+        DB.Attach(UserDB).State = EntityState.Modified;
+
+        try {
+            DB.SaveChangesAsync();
+        } catch(DbUpdateConcurrencyException) {
+            if(!UserException(UserDB.UserID)) {
+                navigationManager.NavigateTo("/Error");
+            } else {
+                throw;
+            }
+        }
+
+        navigationManager.NavigateTo("/users");
+    }
+
+    bool UserException(int id) {
+        return DB.User.Any(x => x.UserID == id);
+    }
+}

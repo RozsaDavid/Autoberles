@@ -1,0 +1,51 @@
+﻿@page "/cars"
+
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator")]
+@inject Autoberles.Data.MyDbContext DB
+@rendermode InteractiveServer
+
+<PageTitle>Autók</PageTitle>
+
+<h1>Autók</h1>
+<hr/>
+
+<a href="/newCar" class="btn btn-info">Új autó</a>
+@if(isThereInactive){
+    <a href=" /inactiveCars" class="btn btn-danger">Autó visszaállítása</a>
+   }
+
+
+@if(DB.Car is null) {
+    <p>Betöltés...</p>
+} else {
+    <QuickGrid Class="table" Items="DB.Car.Where(car=>car.IsActive)" Pagination="state">
+        <PropertyColumn Title="Rendszám" Property="car => car.RegistrationNumber" Sortable="true" />
+        <PropertyColumn Title="Márka" Property="car => car.Brand" Sortable="true" />
+        <PropertyColumn Title="Típus" Property="car => car.Type"  Sortable="true" />
+        <PropertyColumn Title="Évjárat" Property="car => car.Year"  Sortable="true" />
+        <PropertyColumn Title="Ár (HUF)" Property="car => car.Price"  Sortable="true" />
+        <TemplateColumn Context="car" Title="Szerkesztés">
+            <a href="@($"editCar?Id={car.CarID}")" class="btn btn-success">Szerkesztés</a>
+            <a href="@($"deleteCar?Id={car.CarID}")" class="btn btn-danger">Törlés</a>
+        </TemplateColumn>
+    </QuickGrid>
+    <Paginator State="state" />
+}
+
+@code {
+    PaginationState state = new PaginationState { ItemsPerPage = 10 };
+
+    bool isThereInactive = false;
+
+    protected override async Task OnInitializedAsync() {
+        foreach(var elem in DB.Car) {
+            if (elem.IsActive == false)
+                isThereInactive = true;
+        }    
+    }
+
+    // GridSort<Car> sortByType = GridSort<Car>
+    // .ByAscending(p => p.isReady);
+}

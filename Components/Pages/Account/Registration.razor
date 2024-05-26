@@ -1,0 +1,66 @@
+﻿@page "/registration"
+
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Cryptography
+@using System.Text
+@inject Autoberles.Data.MyDbContext DB
+@inject NavigationManager NavigationManager
+@inject IJSRuntime Jsr
+@rendermode InteractiveServer
+
+
+<h3>Regisztráció</h3>
+<hr />
+
+
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" FormName="create" OnValidSubmit="AddUser" Model="UserDB" Enhance>
+            <DataAnnotationsValidator/>
+            <div class="mb-3">
+                <label for="name" class="form-label">Felhasználónév</label>
+                <InputText id="name" class="form-control" @bind-Value="UserDB.Username" />
+                <ValidationMessage For="()=>UserDB.Username" class="text-danger" />
+                <label for="password" class="form-label">Jelszó</label>
+                <InputText id="password" class="form-control" @bind-Value="UserDB.Password" />
+                <ValidationMessage For="()=>UserDB.Password" class="text-danger" />
+            </div>
+
+            <button type="submit" class="btn btn-success">Mentés</button>
+            <a href="/" class="btn btn-primary">Vissza a feladatokhoz</a>
+        </EditForm>
+    </div>
+</div>
+
+
+@code {
+    [SupplyParameterFromForm]
+    public User UserDB { get; set; } = new();
+
+
+    public async Task AddUser() {
+        bool usernameIsTaken = false;
+
+        foreach(var elem in DB.User) {
+            if (elem.Username == UserDB.Username)
+                usernameIsTaken = true;            
+        }
+
+        if(usernameIsTaken) {
+            await Jsr.InvokeVoidAsync("alert", "A felhasználónév már foglalt!");
+            UserDB=new User();
+        } else {
+            var source = Encoding.UTF8.GetBytes(UserDB.Password);
+            var hashBytes = SHA512.Create().ComputeHash(source);
+            UserDB.Password = BitConverter.ToString(hashBytes).Replace("-", "");
+
+            UserDB.Role = "User";
+
+            DB.User.Add(UserDB);
+            await DB.SaveChangesAsync();
+
+            UserDB.Password = String.Empty;
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}

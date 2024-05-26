@@ -1,0 +1,11 @@
+?felhasználó hozzáadása adminként
+?felhasználó név/jelszó módosítása adminként
+?van e jobb megoldás többtáblás Quickgridre
+
+!kinézet
+!szűrők létrehozűsa az oldalakon
+!korábbi foglalások
+!felhasználói profiloldal
+
+
+

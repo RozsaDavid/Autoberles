@@ -1,0 +1,16 @@
+﻿@page "/editReservation"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator, User")]
+@inject Autoberles.Data.MyDbContext DB
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<h3>Szerkesztés</h3>
+<hr />
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+}

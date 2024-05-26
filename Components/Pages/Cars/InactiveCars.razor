@@ -1,0 +1,34 @@
+﻿@page "/inactiveCars"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator")]
+@inject Autoberles.Data.MyDbContext DB
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Autó visszaállítása</PageTitle>
+
+<h1>Autó visszaállítása</h1>
+<hr/>
+
+@if(DB.Car is null) {
+    <p>Betöltés...</p>
+} else {
+    <QuickGrid Class="table" Items="DB.Car.Where(car=>!car.IsActive)" Pagination="state">
+        <PropertyColumn Title="Rendszám" Property="car => car.RegistrationNumber" Sortable="true" />
+        <PropertyColumn Title="Márka" Property="car => car.Brand" Sortable="true" />
+        <PropertyColumn Title="Típus" Property="car => car.Type"  Sortable="true" />
+        <PropertyColumn Title="Évjárat" Property="car => car.Year"  Sortable="true" />
+        <PropertyColumn Title="Ár (HUF)" Property="car => car.Price"  Sortable="true" />
+        <TemplateColumn Context="car" Title="Szerkesztés">
+            <a href="@($"restoreCar?Id={car.CarID}")" class="btn btn-danger">Visszaállítás</a>
+        </TemplateColumn>
+    </QuickGrid>
+    <Paginator State="state" />
+}
+
+@code {
+    PaginationState state = new PaginationState { ItemsPerPage = 10 };
+}
