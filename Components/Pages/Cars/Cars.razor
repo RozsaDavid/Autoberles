@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Roles = "Administrator")]
 @inject Autoberles.Data.MyDbContext DB
+@layout Autoberles.Components.Layout.DBLayOut
 
 @rendermode InteractiveServer
 
@@ -12,9 +13,9 @@
 <h1>Autók</h1>
 <hr/>
 
-<a href="/newCar" class="btn btn-info">Új autó</a>
+<a href="/newCar" class="btn btn-info m-lg-3">Új autó</a>
 @if(isThereInactive){
-    <a href=" /inactiveCars" class="btn btn-danger">Autó visszaállítása</a>
+    <a href="/inactiveCars" class="btn btn-danger m-lg-3">Autó visszaállítása</a>
    }
 
 @if(DB.Car is null) {

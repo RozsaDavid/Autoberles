@@ -5,6 +5,8 @@
 @attribute [Authorize(Roles = "Administrator")]
 @inject Autoberles.Data.MyDbContext DB
 @inject NavigationManager navigationManager
+@inject IJSRuntime Jsr
+
 @rendermode InteractiveServer
 
 <h3>Törlés</h3>
@@ -59,20 +61,31 @@
     }
 
     public async Task deleteCar() {
-        try {
-            CarDB.IsActive = false;
-            DB.Attach(CarDB).State = EntityState.Modified;
-            // DB.Remove(CarDB);
-            DB.SaveChangesAsync();
-
-        } catch(DbUpdateConcurrencyException) {
-            if(!UserException(CarDB.CarID)) {
-                navigationManager.NavigateTo("/Error");
-            } else {
-                throw;
-            }
+        bool thereWasMessage = false;
+        foreach(var res in DB.Reservation) {
+            if((CarDB.CarID == res.CarID) && (DateTime.Compare(res.EndDate, DateTime.Now) > 0) && (!thereWasMessage)) {
+                await Jsr.InvokeVoidAsync("alert", "A törlés foglalás miatt nem lehetséges!\nKérem először törölje az autóhoz tartozó a foglalás(oka)t");
+                thereWasMessage = true;
+            }          
         }
-        navigationManager.NavigateTo("/cars");
+
+        if(!thereWasMessage) {
+            try {
+                CarDB.IsActive = false;
+                DB.Attach(CarDB).State = EntityState.Modified;
+                // DB.Remove(CarDB);
+                DB.SaveChangesAsync();
+
+            } catch(DbUpdateConcurrencyException) {
+                if(!UserException(CarDB.CarID)) {
+                    navigationManager.NavigateTo("/Error");
+                } else {
+                    throw;
+                }
+            }
+            navigationManager.NavigateTo("/cars");
+        }
+        
     }
 
     bool UserException(int id) {

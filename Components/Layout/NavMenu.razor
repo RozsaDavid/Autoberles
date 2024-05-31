@@ -1,33 +1,24 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Autoberles</a>
+﻿<nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow">
+    <div class="nav-item px-3">
+        <NavLink class="nav-link text-dark bg-info bg-opacity-50" href="" Match="NavLinkMatch.All">
+            <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+        </NavLink>
     </div>
-</div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
 
         <AuthorizeView Roles="Administrator">
             <Authorized>
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="users">
+                    <NavLink class="nav-link text-dark bg-info bg-opacity-50" href="users">
                         <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Felhasználók
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="cars">
+                    <NavLink class="nav-link text-dark bg-info bg-opacity-50" href="cars">
                         <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Autók
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="reservations">
+                    <NavLink class="nav-link text-dark bg-info bg-opacity-50" href="reservations">
                         <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Foglalások
                     </NavLink>
                 </div>
@@ -36,17 +27,28 @@
         <AuthorizeView Roles="User">
             <Authorized>
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="newReservation">
+                    <NavLink class="nav-link text-dark bg-info bg-opacity-50" href="newReservation">
                         <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Új foglalás
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="reservations">
+                    <NavLink class="nav-link text-dark bg-info bg-opacity-50" href="reservations">
                         <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Foglalásaim
                     </NavLink>
                 </div>
             </Authorized>
         </AuthorizeView>
     </nav>
-</div>
+
+@code {
+    bool collapseNavMenu = true;
+
+    string baseMenuClass = "navbar-collapse d-sm-inline-flex flex-sm-row-reverse";
+
+    string NavMenuCssClass => baseMenuClass + (collapseNavMenu ? " collapse" : "");
+
+    void ToggleNavMenu() {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
 

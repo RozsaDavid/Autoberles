@@ -1,0 +1,14 @@
+﻿@inherits LayoutComponentBase
+<div class="container-fluid min-vh-100 d-flex flex-column justify-content-between" style="background: linear-gradient(green, grey);">
+
+    <main>
+        <article>
+            <a class="btn btn-primary m-3" href="/">Vissza</a>
+            @Body
+        </article>
+
+    </main>
+    <footer class="modal-footer d-flex justify-content-center align-items-center">
+        <span class="bg-danger bg-opacity-50">&copy; @DateTime.Now.Year Dave&Kore. All rights reserved.</span>
+    </footer>
+</div>

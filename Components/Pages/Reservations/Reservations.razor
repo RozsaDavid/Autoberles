@@ -5,6 +5,8 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Roles = "Administrator, User")]
 @inject Autoberles.Data.MyDbContext DB
+@layout Autoberles.Components.Layout.DBLayOut
+
 @rendermode InteractiveServer
 
 <AuthorizeView Roles="Administrator">
