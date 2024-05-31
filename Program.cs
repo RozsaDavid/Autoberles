@@ -12,7 +12,7 @@ builder.Services.AddRazorComponents()
 //authentikáció
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options => {
     options.Cookie.Name = "auth_token";
-    options.LoginPath = "/Login";
+    options.LoginPath = "/login";
     options.Cookie.MaxAge = TimeSpan.FromMinutes(10);
     options.AccessDeniedPath = "/access-denied";
 });

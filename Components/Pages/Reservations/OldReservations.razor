@@ -1,4 +1,4 @@
-﻿@page "/reservations"
+﻿@page "/oldReservations"
 
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
@@ -9,43 +9,29 @@
 
 <AuthorizeView Roles="Administrator">
     <Authorized>
-        <PageTitle>Foglalások</PageTitle>
-        <h1>Foglalások</h1>
-        <hr />
-        <a href="/newReservation" class="btn btn-primary">Új foglalás</a>
-        @if(isThereOlder) {
-            <a href="/oldReservations" class="btn btn-primary">Előző foglalások</a>
-        }
-    </Authorized>
+        <PageTitle>Befejezett foglalások</PageTitle>
+        <h1>Befejezett foglalások</h1>
+   </Authorized>
 </AuthorizeView>
 
 <AuthorizeView Roles="User">
     <Authorized>
-        <PageTitle>Foglalásaim</PageTitle>
-        <h1>Foglalásaim</h1>
-        <hr />
-        <a href="/newReservation" class="btn btn-primary">Új foglalás</a>
-        @if(isThereOlder) {
-            @foreach(var elem in viewReservations) {
-                if(elem.Username == context.User.Identity.Name) {
-                    isThereOlderFromUser = true;
-                }
-            }
-        }
-        @if(isThereOlderFromUser) {
-            <a href="/oldReservations" class="btn btn-primary">Előző foglalásaim</a>
-        }
+        <PageTitle>Befejezett foglalásaim</PageTitle>
+        <h1>Befejezett foglalásaim</h1>
     </Authorized>
 </AuthorizeView>
+
+<hr />
+<a href="/Reservations" class="btn btn-primary">Vissza a foglalásokhoz</a>
 
 @if(DB.Reservation is null || DB.User is null || DB.Car is null) {
     <p>Betöltés...</p>
 } else {
     <AuthorizeView Roles="Administrator">
         <Authorized>
-            <QuickGrid Class="table" Items="@viewReservations.AsQueryable().Where(reservation=> (DateTime.Compare(reservation.EndDate,DateTime.Now)>=0)&&(reservation.Username.Contains(usernameFilter))&&(reservation.RegistrationNumber.Contains(registrationNumberFilter)))" Pagination="state">
+            <QuickGrid Class="table" Items="@viewReservations.AsQueryable().Where(reservation=> (DateTime.Compare(reservation.EndDate,DateTime.Now)<0)&&(reservation.Username.Contains(usernameFilter))&&(reservation.RegistrationNumber.Contains(registrationNumberFilter)))" Pagination="state">
                 <PropertyColumn Title="Felhasználónév" Property="reservation => reservation.Username" Sortable="true" >
-                    <ColumnOptions>
+                     <ColumnOptions>
                         <div class="search-box">
                             <input type="search" autofocus @bind="usernameFilter" @bind:event="oninput" placeholder="Felhasználónév..." />
                         </div>
@@ -60,9 +46,6 @@
                 </PropertyColumn>
                 <PropertyColumn Title="Foglalás kezdete" Property="reservation => reservation.StartDate" Format="yyyy. MM. dd." Sortable="true" />
                 <PropertyColumn Title="Foglalás vége" Property="reservation => reservation.EndDate" Format="yyyy. MM. dd." Sortable="true" />
-                <TemplateColumn Context="reservation" Title="Törlés">
-                    <a href="@($"deleteReservation?Id={reservation.ReservationID}")" class="btn btn-danger">Törlés</a>
-                </TemplateColumn>
             </QuickGrid>
             <Paginator State="state" />
         </Authorized>
@@ -70,7 +53,7 @@
 
     <AuthorizeView Roles="User">
         <Authorized>
-            <QuickGrid Class="table" Items="@viewReservations.AsQueryable().Where(reservation => ((reservation.Username==context.User.Identity.Name) && (DateTime.Compare(reservation.EndDate,DateTime.Now)>=0)) &&(reservation.RegistrationNumber.Contains(registrationNumberFilter)))" Pagination="state">
+            <QuickGrid Class="table" Items="@viewReservations.AsQueryable().Where(reservation => ((reservation.Username==context.User.Identity.Name) && (DateTime.Compare(reservation.EndDate,DateTime.Now)<0)) &&(reservation.RegistrationNumber.Contains(registrationNumberFilter)))" Pagination="state">
                 <PropertyColumn Title="Autó rendszáma" Property="reservation => reservation.RegistrationNumber" Sortable="true" >
                     <ColumnOptions>
                         <div class="search-box">
@@ -80,9 +63,6 @@
                 </PropertyColumn>
                 <PropertyColumn Title="Foglalás kezdete" Property="reservation => reservation.StartDate" Format="yyyy. MM. dd." Sortable="true" />
                 <PropertyColumn Title="Foglalás vége" Property="reservation => reservation.EndDate" Format="yyyy. MM. dd." Sortable="true" />
-                <TemplateColumn Context="reservation" Title="Szerkesztés">
-                    <a href="@($"deleteReservation?Id={reservation.ReservationID}")" class="btn btn-danger">Törlés</a>
-                </TemplateColumn>
             </QuickGrid>
             <Paginator State="state" />
         </Authorized>
@@ -107,9 +87,6 @@
 
     PaginationState state = new PaginationState { ItemsPerPage = 10 };
 
-    bool isThereOlder = false;
-    bool isThereOlderFromUser = false;
-
     protected override async Task OnInitializedAsync() {
         foreach(Reservation res in DB.Reservation) {
             ViewReservation tempVR = new ViewReservation();
@@ -131,13 +108,6 @@
             for(int i = 0;i < viewReservations.Count;i++)
                 if(car.CarID == viewReservations[i].CarID)
                     viewReservations[i].RegistrationNumber = car.RegistrationNumber;
-        }
-
-
-        foreach(var elem in viewReservations) {
-            if(DateTime.Compare(elem.EndDate, DateTime.Now) < 0){
-                isThereOlder = true;
-            }
         }
     }
 }

@@ -14,7 +14,6 @@ namespace Autoberles.Model {
         public DateTime StartDate { get; set; }
         [Required]
         public DateTime EndDate { get; set; }
-        public bool State { get; set; }
     }
 
 }

@@ -12,13 +12,19 @@
 
 <h1>Autó visszaállítása</h1>
 <hr/>
-
+<a href="/cars" class="btn btn-info">Vissza az autókhoz</a>
 @if(DB.Car is null) {
     <p>Betöltés...</p>
 } else {
     <QuickGrid Class="table" Items="DB.Car.Where(car=>!car.IsActive)" Pagination="state">
         <PropertyColumn Title="Rendszám" Property="car => car.RegistrationNumber" Sortable="true" />
-        <PropertyColumn Title="Márka" Property="car => car.Brand" Sortable="true" />
+        <PropertyColumn Title="Márka" Property="car => car.Brand" Sortable="true" >
+            <ColumnOptions>
+                <div class="search-box">
+                    <input type="search" autofocus @bind="brandFilter" @bind:event="oninput" placeholder="Márka..." />
+                </div>
+            </ColumnOptions>
+        </PropertyColumn>
         <PropertyColumn Title="Típus" Property="car => car.Type"  Sortable="true" />
         <PropertyColumn Title="Évjárat" Property="car => car.Year"  Sortable="true" />
         <PropertyColumn Title="Ár (HUF)" Property="car => car.Price"  Sortable="true" />
@@ -31,4 +37,6 @@
 
 @code {
     PaginationState state = new PaginationState { ItemsPerPage = 10 };
+
+    string brandFilter = "";
 }

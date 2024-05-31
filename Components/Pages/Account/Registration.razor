@@ -12,7 +12,6 @@
 <h3>Regisztráció</h3>
 <hr />
 
-
 <div class="row">
     <div class="col-md-4">
         <EditForm method="post" FormName="create" OnValidSubmit="AddUser" Model="UserDB" Enhance>
@@ -22,12 +21,21 @@
                 <InputText id="name" class="form-control" @bind-Value="UserDB.Username" />
                 <ValidationMessage For="()=>UserDB.Username" class="text-danger" />
                 <label for="password" class="form-label">Jelszó</label>
-                <InputText id="password" class="form-control" @bind-Value="UserDB.Password" />
+                <InputText type="password" id="password" class="form-control" @bind-Value="UserDB.Password" />
                 <ValidationMessage For="()=>UserDB.Password" class="text-danger" />
+                <label for="email" class="form-label">E-mail</label>
+                <InputText id="email" class="form-control" @bind-Value="UserDB.Email" />
+                <ValidationMessage For="()=>UserDB.Email" class="text-danger" />
+                <label for="address" class="form-label">Cím</label>
+                <InputText id="address" class="form-control" @bind-Value="UserDB.Address" />
+                <ValidationMessage For="()=>UserDB.Address" class="text-danger" />
+                <label for="phone" class="form-label">Telefonszám</label>
+                <InputText id="phone" class="form-control" @bind-Value="UserDB.Phone" />
+                <ValidationMessage For="()=>UserDB.Phone" class="text-danger" />
             </div>
 
-            <button type="submit" class="btn btn-success">Mentés</button>
-            <a href="/" class="btn btn-primary">Vissza a feladatokhoz</a>
+            <button type="submit" class="btn btn-success">Regisztrálás</button>
+            <a href="/" class="btn btn-primary">Vissza a főoldalra</a>
         </EditForm>
     </div>
 </div>
@@ -39,15 +47,15 @@
 
 
     public async Task AddUser() {
-        bool usernameIsTaken = false;
+        bool dataIsTaken = false;
 
         foreach(var elem in DB.User) {
-            if (elem.Username == UserDB.Username)
-                usernameIsTaken = true;            
+            if (elem.Username == UserDB.Username || elem.Email == UserDB.Email)
+                dataIsTaken = true;            
         }
 
-        if(usernameIsTaken) {
-            await Jsr.InvokeVoidAsync("alert", "A felhasználónév már foglalt!");
+        if(dataIsTaken) {
+            await Jsr.InvokeVoidAsync("alert", "A felhasználónév és/vagy az e-mail cím már foglalt!");
             UserDB=new User();
         } else {
             var source = Encoding.UTF8.GetBytes(UserDB.Password);

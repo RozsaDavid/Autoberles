@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Roles = "Administrator")]
 @inject Autoberles.Data.MyDbContext DB
+
 @rendermode InteractiveServer
 
 <PageTitle>Autók</PageTitle>
@@ -16,13 +17,18 @@
     <a href=" /inactiveCars" class="btn btn-danger">Autó visszaállítása</a>
    }
 
-
 @if(DB.Car is null) {
     <p>Betöltés...</p>
 } else {
-    <QuickGrid Class="table" Items="DB.Car.Where(car=>car.IsActive)" Pagination="state">
+    <QuickGrid Class="table" Items="DB.Car.Where(car=>(car.IsActive) && (car.Brand.Contains(brandFilter)))" Pagination="state">
         <PropertyColumn Title="Rendszám" Property="car => car.RegistrationNumber" Sortable="true" />
-        <PropertyColumn Title="Márka" Property="car => car.Brand" Sortable="true" />
+        <PropertyColumn Title="Márka" Property="car => car.Brand" Sortable="true" >
+            <ColumnOptions>
+                <div class="search-box">
+                    <input type="search" autofocus @bind="brandFilter" @bind:event="oninput" placeholder="Márka..." />
+                </div>
+            </ColumnOptions>
+        </PropertyColumn>
         <PropertyColumn Title="Típus" Property="car => car.Type"  Sortable="true" />
         <PropertyColumn Title="Évjárat" Property="car => car.Year"  Sortable="true" />
         <PropertyColumn Title="Ár (HUF)" Property="car => car.Price"  Sortable="true" />
@@ -38,13 +44,14 @@
     PaginationState state = new PaginationState { ItemsPerPage = 10 };
 
     bool isThereInactive = false;
+    string brandFilter="";
 
     protected override async Task OnInitializedAsync() {
         foreach(var elem in DB.Car) {
             if (elem.IsActive == false)
                 isThereInactive = true;
-        }    
-    }
+        }
+    }
 
     // GridSort<Car> sortByType = GridSort<Car>
     // .ByAscending(p => p.isReady);

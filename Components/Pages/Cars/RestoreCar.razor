@@ -8,6 +8,7 @@
 @rendermode InteractiveServer
 
 
+
 <h3>Visszaállítás</h3>
 <hr />
 <div>
@@ -61,6 +62,7 @@
 
     public async Task restoreCar() {
         try {
+            
             CarDB.IsActive = true;
             DB.Attach(CarDB).State = EntityState.Modified;
             // DB.Remove(CarDB);

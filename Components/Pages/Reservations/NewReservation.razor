@@ -1,56 +1,24 @@
-﻿@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.QuickGrid
-@using System.Security.Claims;
-@using Microsoft.EntityFrameworkCore
-@using System.Globalization
-@inject Autoberles.Data.MyDbContext DB
-@inject NavigationManager NM
-@rendermode InteractiveServer
+﻿@page "/newReservation"
 
-@page "/newReservation"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.EntityFrameworkCore
 @attribute [Authorize(Roles = "Administrator, User")]
+@inject Autoberles.Data.MyDbContext DB
+@inject NavigationManager navigationManager
+@inject IJSRuntime Jsr
+@rendermode InteractiveServer
 
 <PageTitle>Új foglalás</PageTitle>
 
 <h1>Új foglalás</h1>
 
-@* @if ((DB.Reservation is null || DB.User is null || DB.Car is null))
-{
-    <span>Betöltés...</span>
-}
-else
-{
-    foreach(Reservation res in DB.Reservation)
-    {
-        ResViewModel rvm = new ResViewModel();
-        rvm.ResID = res.ReservationID;
-        rvm.CarID = res.CarID;
-        rvm.UserID = res.UserID;
-        rvm.ResStart = res.StartDate;
-        rvm.ResEnd = res.EndDate;
-        resViews.Add(rvm);
+@* csalás, de működik D.*@
+<AuthorizeView>
+    @if(true) {
+        activeUser = context.User.Identity.Name;
     }
-}
-@foreach(Car car in DB.Car)
-{
-    for (int i = 0; i < resViews.Count; i++)
-    {
-        if(car.CarID == resViews[i].CarID)
-        {
-            resViews[i].BrandName = car.Brand;
-        }
-    }
-}
-@foreach(User user in DB.User)
-{
-    for (int i = 0; i < resViews.Count; i++)
-    {
-        if(user.UserID == resViews[i].UserID)
-        {
-            resViews[i].UserName = user.Username;
-        }
-    }
-} *@
+</AuthorizeView>
 
 <div class="container">
     <div class="row justify-content-center">
@@ -59,7 +27,7 @@ else
                 <label class="mt-3 m-2">Kezdődátum:</label>
                 <div class="mt-3 me-5"><InputDate @bind-Value="SearchStart"></InputDate></div>
                 <label class="mt-3 m-2">Végdátum:</label>
-                <div class="mt-3"><InputDate @bind-Value="SearchEnd"></InputDate></div>
+                    <div class="mt-3"><InputDate @bind-Value="SearchEnd"></InputDate></div>
             </div>
         </div>
     </div>
@@ -76,45 +44,37 @@ else
         <PropertyColumn Title="Típus" Property="car => car.Type" Sortable="true" />
         <PropertyColumn Title="Évjárat" Property="car => car.Year" Sortable="true" />
         <PropertyColumn Title="Ár (HUF)" Property="car => car.Price" Sortable="true" />
-        <TemplateColumn Context="car" Title="Szerkesztés">
+        <TemplateColumn Context="car" Title="Foglalás">
             <button class="btn btn-success" @onclick="()=>ReserveCar(car)">Foglalás</button>
         </TemplateColumn>
     </QuickGrid>
 }
 
 @code{
-    [CascadingParameter]
-    public HttpContext httpContext { set; get; }
-
     [SupplyParameterFromForm]
     Reservation newRes { set; get; } = new();
 
-    public DateTime SearchStart = DateTime.Now;
+    public string activeUser;
+
+    public DateTime SearchStart = DateTime.Now.AddDays(1);
     public DateTime SearchEnd = DateTime.Now.AddDays(7);
 
     private bool showQG = false;
     private List<Car> filteredCars = new List<Car>();
 
-    // public class ResViewModel()
-    // {
-    //     public int ResID { get; set; }
-    //     public int CarID { get; set; }
-    //     public int UserID { get; set; }
-    //     public string BrandName { get; set; }
-    //     public string UserName { get; set; }
-    //     public DateTime ResStart { get; set; }
-    //     public DateTime ResEnd { get; set; }
-
-    // }
-
-    // List<ResViewModel> resViews = new List<ResViewModel>();
-
     private async Task ShowGrid()
     {
-        string startDateString0 = SearchStart.ToShortDateString();
-        string endDateString0 = SearchEnd.ToShortDateString();
-        filteredCars = await GetCarsExcludingDateRange(DateTime.Parse(startDateString0),DateTime.Parse(endDateString0));
-        showQG = true;
+        if ((DateTime.Compare(SearchStart, SearchEnd) > 0) || DateTime.Compare(SearchStart, DateTime.Now)<0) {
+            Jsr.InvokeVoidAsync("alert", "Hibás dátum!");
+            SearchStart = DateTime.Now.AddDays(1);
+            SearchEnd = DateTime.Now.AddDays(7);
+    } else {
+            string startDateString0 = SearchStart.ToShortDateString();
+            string endDateString0 = SearchEnd.ToShortDateString();
+            filteredCars = await GetCarsExcludingDateRange(DateTime.Parse(startDateString0), DateTime.Parse(endDateString0));
+            showQG = true;
+        }
+        
     }
     private Task<List<Car>> GetCarsExcludingDateRange(DateTime startDate, DateTime endDate)
     {
@@ -137,14 +97,22 @@ else
 
         if (overlappingReservations)
         {
-            NM.NavigateTo("/newReservation");
+            navigationManager.NavigateTo("/newReservation");
         }
         else
         {
+            //UserID keresése D.
+
+            int reservationUserID=-1;
+            foreach(User user in DB.User) {
+                if(user.Username == activeUser)
+                    reservationUserID = user.UserID;
+            }
+
             Reservation newReservation = new Reservation
                 {
                     CarID = car.CarID,
-                    UserID = DB.User.FirstOrDefault().UserID,
+                    UserID = reservationUserID,
                     StartDate = SearchStart,
                     EndDate = SearchEnd
                 };
@@ -152,7 +120,7 @@ else
             DB.Reservation.Add(newReservation);
             await DB.SaveChangesAsync();
             showQG = false;
-            NM.NavigateTo("/");
+            navigationManager.NavigateTo("/reservations");
         }
     }
 }

@@ -4,8 +4,6 @@
 
 !kinézet
 !szűrők létrehozűsa az oldalakon
-!korábbi foglalások
-!felhasználói profiloldal
 
 
 

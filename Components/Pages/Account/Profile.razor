@@ -1,0 +1,121 @@
+﻿@page "/profile"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Cryptography
+@using System.Text
+@attribute [Authorize(Roles = "Administrator, User")]
+@inject Autoberles.Data.MyDbContext DB
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+@inject IJSRuntime Jsr
+
+<h3>Szerkesztés</h3>
+<hr />
+
+<div>
+    @if(UserDB is null) {
+        <p><em>Loading...</em></p>
+    } else {
+        <div class="row">
+            <div class="col-md4">
+                <EditForm method="post" Model="UserDB" OnValidSubmit="UpdateUser" FormName="Edit" Enhance>
+                    <DataAnnotationsValidator />
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Felhasználónév</label>
+                        <InputText id="username" class="form-control" @bind-Value="UserDB.Username" />
+                        <ValidationMessage For="()=>UserDB.Username" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Jelszó</label>
+                        <InputText type="password" id="password" class="form-control" @bind-Value="UserDB.Password" />
+                        <ValidationMessage For="()=>UserDB.Password" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-mail</label>
+                        <InputText id="email" class="form-control" @bind-Value="UserDB.Email" />
+                        <ValidationMessage For="()=>UserDB.Email" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Cím</label>
+                        <InputText id="address" class="form-control" @bind-Value="UserDB.Address" />
+                        <ValidationMessage For="()=>UserDB.Address" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Telefonszám</label>
+                        <InputText id="phone" class="form-control" @bind-Value="UserDB.Phone" />
+                        <ValidationMessage For="()=>UserDB.Phone" class="text-danger" />
+                    </div>
+
+                    <button type="submit" class="btn btn-success" disabled="@(UserDB is null)">Mentés</button>
+                    <a href="/" class="btn btn-primary">Vissza a kezdőlapra</a>
+                </EditForm>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string Username{ get; set; }
+
+    [SupplyParameterFromForm]
+    public User? UserDB { get; set; }
+
+    public string tempPass;
+
+    protected override async Task OnInitializedAsync() {
+        UserDB = await DB.User.FirstOrDefaultAsync(m => m.Username == Username);
+
+        tempPass = UserDB.Password;
+        UserDB.Password = String.Empty;
+
+        if(UserDB is null) {
+            navigationManager.NavigateTo("/Error");
+        }
+    }
+
+    public async Task UpdateUser() {
+        bool dataIsTaken = false;
+
+        foreach(var elem in DB.User) {
+            if((elem.Username == UserDB.Username || elem.Email == UserDB.Email) && elem.UserID!=UserDB.UserID)
+                dataIsTaken = true;
+        }
+
+        if(dataIsTaken) {
+            await Jsr.InvokeVoidAsync("alert", "A felhasználónév és/vagy az e-mail cím már foglalt!");
+            UserDB = new User();
+        } else {
+            if (UserDB.Password == String.Empty)
+                UserDB.Password = tempPass;
+            else {
+                var source = Encoding.UTF8.GetBytes(UserDB.Password);
+                var hashBytes = SHA512.Create().ComputeHash(source);
+                UserDB.Password = BitConverter.ToString(hashBytes).Replace("-", "");
+            }
+  
+            try {
+                DB.Attach(UserDB).State = EntityState.Modified;
+                          
+                DB.SaveChangesAsync();
+            } catch(DbUpdateConcurrencyException) {
+                if(!UserException(UserDB.UserID)) {
+                    navigationManager.NavigateTo("/Error");
+                } else {
+                    throw;
+                }
+            }
+            UserDB.Password = String.Empty;
+            navigationManager.NavigateTo("/");
+        }
+    }
+
+    bool UserException(int id) {
+        return DB.User.Any(x => x.UserID == id);
+    }
+}
